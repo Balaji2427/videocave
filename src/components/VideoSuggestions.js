@@ -1,0 +1,78 @@
+import React, { useEffect, useState } from 'react';
+import { GOOGLE_API_KEY } from '../utils/constants';
+
+const Shimmer = () => {
+  return (
+    <div className="flex items-center p-3">
+      <div className="w-[10rem] h-[6rem] bg-gray-300 rounded-xl animate-pulse"></div>
+      <div className="ml-3 mb-4">
+        <div className="w-40 h-4 bg-gray-300 rounded animate-pulse mb-1"></div>
+        <div className="w-20 h-4 bg-gray-300 rounded animate-pulse mb-1"></div>
+        <div className="w-14 h-4 bg-gray-300 rounded animate-pulse mb-1"></div>
+        <div className="w-8 h-4 bg-gray-300 rounded animate-pulse"></div>
+      </div>
+    </div>
+  );
+};
+
+const VideoSuggestions = ({videoId}) => {
+
+  const [suggestions, setSuggestions] = useState([]);
+
+
+  useEffect(() => {
+    const fetchVideoSuggestions = async () => {
+      try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&relatedToVideoId=${videoId}&type=video&key=${GOOGLE_API_KEY}&maxResults=50`);
+        const data = await response.json();
+        setSuggestions(data.items);
+      } catch(error) {
+        console.error(error);
+      }
+    };
+
+    fetchVideoSuggestions();
+  }, [videoId])
+
+  return (
+    <div className="mb-6 ml-8">
+      <h2 className="text-xl font-bold mb-4">Video Suggestions</h2>
+      <ul className="max-h-[147.8rem] overflow-y-auto border rounded-lg bg-gray-100">
+        {suggestions && suggestions.length > 0 ? (
+          suggestions.map((suggestion) => (
+            <li key={suggestion.id.videoId}>
+              <a
+                href={`watch?v=${suggestion.id.videoId}`}
+                rel="noopener noreferrer"
+                className="flex items-center p-3 hover:bg-gray-300 hover:rounded-2xl"
+              >
+                <img
+                  src={suggestion.snippet.thumbnails.medium.url}
+                  alt=""
+                  className="w-25 h-[6rem] object-cover rounded"
+                />
+                <div className="ml-3">
+                  <p className="text-sm font-bold text-gray-800">
+                    {suggestion.snippet.title}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {suggestion.snippet.channelTitle}
+                  </p>
+                </div>
+              </a>
+            </li>
+          ))
+        ) : (
+          // If no suggestions have been loaded yet, show a shimmer effect to indicate that data is loading
+          <div className="p-3 text-gray-600">
+            {Array.from({ length: 20 }).map((_, index) => (
+              <Shimmer key={index} />
+            ))}
+          </div>
+        )}
+      </ul>
+    </div>
+  );
+};
+
+export default VideoSuggestions;
